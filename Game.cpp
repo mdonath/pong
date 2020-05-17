@@ -5,28 +5,25 @@
 #include "Ball.h"
 #include "Sound.h"
 
-void Game::begin(Field *field, Player *player1, Player *player2, Sound *sound) {
-  this->_field = field;
-  this->_player1 = player1;
-  this->_player2 = player2;
+
+Game::Game(Field *field, Sound *sound, Player *player1, Player *player2) :
+  _field(field),
+  _player1(player1),
+  _player2(player2),
+  _sound(sound) {
+
+  _field->setGame(this);
+  _field->assignToZone1(_player1);
+  _field->assignToZone2(_player2);
+
+  _ball = new Ball(_field);
 
   randomSeed(analogRead(0));
-  _currentPlayer = random(2) == 0 ? player1 : player2;
-
-  _ball = new Ball();
-  _ball->begin(_field->size());
-
-  _sound = sound;
-  _sound->begin();
+  _currentPlayer = random(2) == 0 ? _player1 : _player2;
 }
 
-Player *Game::getPlayer(byte number) {
-  switch (number) {
-    case 1:
-      return _player1;
-    case 2:
-      return _player2;
-  }
+void Game::begin() {
+  _sound->begin();
 }
 
 void Game::menu() {
@@ -40,7 +37,7 @@ void Game::menu() {
 
 void Game::checkMenuBrightness() {
   if (_player1->isPressingButton()) {
-    _field->nextBrightness();
+    _field->setupNextBrightness();
     _player1->waitForButtonRelease();
   }
 }
@@ -66,7 +63,6 @@ void Game::start() {
   }
 }
 
-
 void Game::initializeGame() {
   _sound->playStartGame();
   _speed = startingGameSpeed;
@@ -77,13 +73,11 @@ void Game::initializeGame() {
   _field->drawDimmed(this);  // show gamefield with dimmed score
 }
 
-
 void Game::initializePlayers() {
   // set the player-settings -> wait for keypress to start game
   _field->drawBallAtPlayerAndWait(_ball, _currentPlayer);
   _sound->playBounce();
 }
-
 
 void Game::gameLoop() {
   while (true) {   // exit with break when a player scores
@@ -91,26 +85,26 @@ void Game::gameLoop() {
     if (_ball->isTimeToUpdate()) {
       _field->drawDimmed(false);
       _ball->updatePosition();
-      if (_player1->isPastEndZone(_ball) || _player2->isPastEndZone(_ball)) {
-        break;             // leave loop -> a player made a score
+      if (_ball->isPastEndZones()) {
+        // leave loop because a player made a score
+        break;
       }
 
       // generate ball (white)
-      _field->drawMovingBall(_ball);
+      _ball->drawMovingBall();
     }
 
-    checkInput();
+    checkPlayerButtons();
   }
 }
 
-
 // *** check if buttons pressed
-void Game::checkInput() {
-  checkPlayerButton(_player1, Ball::Direction::LEFT);
-  checkPlayerButton(_player2, Ball::Direction::RIGHT);
+void Game::checkPlayerButtons() {
+  checkPlayerButton(_player1, BallDirection::LEFT);
+  checkPlayerButton(_player2, BallDirection::RIGHT);
 }
 
-void Game::checkPlayerButton(Player* const player, const Ball::Direction direction) {
+void Game::checkPlayerButton(Player* const player, const BallDirection direction) {
   if (!player->hasAlreadyPressedButton() && player->isButtonPressed() && _ball->direction() == direction) {
     _field->rememberButtonPress(_ball, player);
     if (player->hasButtonPressedInEndZone(_ball)) {
@@ -121,20 +115,20 @@ void Game::checkPlayerButton(Player* const player, const Ball::Direction directi
 
 void Game::changeDirection(Player *player) {
   _speed -= speedStep;
-  Ball::SpeedType speedType = _ball->changeDirection(_speed, player);
+  BallSpeedType speedType = _ball->changeDirection(_speed, player);
   playBounceSound(speedType);
   player->forgetPressed();
 }
 
-void Game::playBounceSound(Ball::SpeedType speedType) {
+void Game::playBounceSound(BallSpeedType speedType) {
   switch (speedType) {
-    case Ball::SpeedType::NORMAL:
+    case BallSpeedType::NORMAL:
       _sound->playBounce();
       break;
-    case Ball::SpeedType::NORMAL_BOOST:
+    case BallSpeedType::NORMAL_BOOST:
       _sound->playSmash();
       break;
-    case Ball::SpeedType::SUPER_BOOST:
+    case BallSpeedType::SUPER_BOOST:
       _sound->playSuperSmash();
       break;
   }
@@ -153,7 +147,7 @@ void Game::checkScore() {
   }
 }
 
-void Game::showScoringPlayer(Player* const player) {
+void Game::showScoringPlayer(Player *player) {
   player->addPoint();
 
   _field->blinkNewScore(player);

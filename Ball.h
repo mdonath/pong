@@ -2,55 +2,55 @@
 #define __PONG_BALL_H
 
 #include "Player.h"
+#include "Field.h"
 
 class Player;
+class Field;
 
+enum BallDirection : int {
+  LEFT = -1,
+  RIGHT = +1,
+};
+
+enum BallSpeedType : int {
+  NORMAL = 1,
+  NORMAL_BOOST = 15,
+  SUPER_BOOST = 25,
+};
 
 class Ball {
   public:
-    enum Direction {
-      LEFT = -1,
-      RIGHT = +1,
-    };
+    Ball(Field *field);
 
-    enum SpeedType {
-      NORMAL = 1,
-      NORMAL_BOOST = 15,
-      SUPER_BOOST = 25,
-    };
-
-  public:
-
-    void begin(int maximumPosition);
-    void setSpeed(int speed);
     bool isTimeToUpdate();
     void updatePosition();
-    int position() {
-      return _currentPosition;
-    }
-    Direction direction() {
-      return _direction;
-    }
-    SpeedType speedType() {
-      return _speedType;
-    }
-    SpeedType changeDirection(int gameSpeed, Player *player);
+    bool isPastEndZones();
+
+    int position();
+    BallDirection direction();
+    BallSpeedType speedType();
+
+    void setSpeed(int speed);
+    BallSpeedType changeDirection(int gameSpeed, Player *player);
 
     void startAt(Player *player);
 
-    void drawMoving(CRGB *leds, int brightness);
-    void drawTail(CRGB *leds, int brightness);
-    void draw(CRGB *leds, Color color, const byte saturation, int brightness);
+    void drawMovingBall();
+    void drawMoving(int brightness);
+    void drawTail(int brightness);
+    void draw(Color color, const byte saturation, int brightness);
 
   private:
     const int speedMax = 1;
 
+    Field *_field;
+
     int _maximumPosition;
     int _currentPosition;
     int _speed;
-    SpeedType _speedType;
+    BallSpeedType _speedType;
 
-    Direction _direction = LEFT;
+    BallDirection _direction = LEFT;
 
     unsigned long _previousMoveMillis;
 

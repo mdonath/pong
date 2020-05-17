@@ -44,24 +44,23 @@
 #define PLAYER2_PIN 8
 #define LED_DATA_PIN 9
 
+#define ZONE_LENGTH 6
 
 Player player1(PLAYER1_PIN, Color::PLAYER1);
 Player player2(PLAYER2_PIN, Color::PLAYER2);
 
-Field field;
-Zone zonePlayer1(0, 6);
-Zone zonePlayer2(NUMBER_OF_LEDS - 1, -6);
-
-Game game;
+Field field(NUMBER_OF_LEDS, ZONE_LENGTH);
 Sound sound(BUZZER_PIN);
+
+Game game(&field, &sound, &player1, &player2);
 
 void setup() {
   Serial.begin(9600);
 
-  player1.begin(&zonePlayer1);
-  player2.begin(&zonePlayer2);
-  field.begin<LED_DATA_PIN>(NUMBER_OF_LEDS, &game);
-  game.begin(&field, &player1, &player2, &sound);
+  player1.begin();
+  player2.begin();
+  field.begin<LED_DATA_PIN>();
+  game.begin();
 }
 
 void loop() {

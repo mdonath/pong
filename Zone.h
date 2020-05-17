@@ -4,23 +4,34 @@
 #include <Arduino.h>
 #include <FastLED.h>
 #include "Colors.h"
+#include "Field.h"
+#include "Player.h"
 
+class Player;
+class Field;
 
 class Zone {
   public:
 
-    Zone(int homePosition, int zoneLength) :
+    Zone(Field *field, int homePosition, int zoneLength) :
+      _field(field),
       _homePosition(homePosition),
       _length(zoneLength)
     {
     }
+
+    Player *getPlayer();
+    void setPlayer(Player *player);
+
+    void setSetupMode();
+    void setGameMode();
 
     bool isInEndZone(int ballPosition);
     bool isPastEndZone(int ballPosition);
     bool isNormalBoost(int ballPosition);
     bool isSuperBoost(int ballPosition);
 
-    void draw(CRGB *leds, int brightness);
+    void draw(int brightness);
 
     void setColor(Color color) {
       _color = color;
@@ -35,6 +46,9 @@ class Zone {
     }
 
   private:
+    Field *_field;
+    Player *_player;
+    
     int _homePosition;
     int _length;
     int _color = Color::ENDZONE_GAME;

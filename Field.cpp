@@ -5,12 +5,28 @@
 #include "Game.h"
 #include <colorutils.h>
 
+Field::Field(int numberOfLeds, int zoneLength) :
+  _numberOfLeds(numberOfLeds)
+{
+  _zone1 = new Zone(this, 0, zoneLength);
+  _zone2 = new Zone(this, _numberOfLeds - 1, -zoneLength);
+
+  _score = new ScoreBoard(this, _numberOfLeds);
+}
 
 void Field::clear() {
   FastLED.clear();
 }
 
-void Field::nextBrightness() {
+void Field::setLed(int position, CHSV color, bool show) {
+  _leds[position] = color;
+  if (show) {
+    FastLED.show();
+  }
+}
+
+
+void Field::setupNextBrightness() {
   _maxBrightness += 50;
   if (_maxBrightness > 255) {
     _maxBrightness = 55;
@@ -18,6 +34,19 @@ void Field::nextBrightness() {
   clear();
   drawEndZone();
   FastLED.show();
+}
+
+void Field::assignToZone1(Player *player) {
+  player->setZone(_zone1);
+}
+
+void Field::assignToZone2(Player *player) {
+  player->setZone(_zone2);
+}
+
+bool Field::isPastEndZones(Ball *ball) {
+  int pos = ball->position();
+  return _zone1->isPastEndZone(pos) || _zone2->isPastEndZone(pos);
 }
 
 void Field::drawDimmed(const bool show) {
@@ -39,15 +68,15 @@ void Field::draw(const byte scoreBrightness, const bool show) {
 }
 
 void Field::drawBall(Ball *ball, const Color color, const byte saturation) {
-  ball->draw(leds, color, saturation, _maxBrightness);
+  ball->draw(color, saturation, _maxBrightness);
   FastLED.show();
 }
 
 void Field::drawMovingBall(Ball *ball) {
-  ball->drawMoving(leds, _maxBrightness);
+  ball->drawMoving(_maxBrightness);
   FastLED.show();
 }
-  
+
 void Field::drawBallAtPlayerAndWait(Ball *ball, Player *player) {
   ball->startAt(player);
 
@@ -70,42 +99,27 @@ void Field::forgetButtonPress() {
 }
 
 void Field::showSetupMode() {
-  _game->getPlayer(1)->setSetupMode();
-  _game->getPlayer(2)->setSetupMode();
+  _zone1->setSetupMode();
+  _zone2->setSetupMode();
 };
 
 void Field::showGameMode() {
-  _game->getPlayer(1)->setGameMode();
-  _game->getPlayer(2)->setGameMode();
+  _zone1->setGameMode();
+  _zone2->setGameMode();
 };
 
 int Field::size() {
   return _numberOfLeds;
 }
 
-
-void Field::blinkNewScore(Player* const player) {
-  int pos = _numberOfLeds / 2;
-  if (player->isLeftPlayer()) {
-    pos -= player->getScore();
-  } else {
-    pos += player->getScore() - 1;
-  }
-  Color color = player->color;
-
-  draw(false);
-
-  for (int i = 1; i <= 4; i++) {
-    leds[pos] = CHSV(color, 255, (i % 2) * _maxBrightness);  // blink LED 2 times (1-0-1-0)
-    FastLED.show();
-    delay(300);
-  }
+void Field::blinkNewScore(Player *player) {
+  _score->blinkNewScore(player, _maxBrightness);
 }
 
 
 void Field::drawEndZone() {
-  _game->getPlayer(1)->drawZone(leds, _maxBrightness);
-  _game->getPlayer(2)->drawZone(leds, _maxBrightness);
+  _zone1->draw(_maxBrightness);
+  _zone2->draw(_maxBrightness);
 }
 
 
@@ -113,15 +127,7 @@ void Field::drawEndZone() {
    Draws the scores of both players in the middle of the field.
 */
 void Field::drawScore(const int brightness) {
-  int halfNumberOfLeds = _numberOfLeds / 2;
-
-  for (int i = 0; i < _game->getPlayer(1)->getScore(); i++) {
-    leds[halfNumberOfLeds - 1 - i] = CHSV(_game->getPlayer(1)->color, 255, brightness);
-  }
-
-  for (int i = 0; i < _game->getPlayer(2)->getScore(); i++) {
-    leds[halfNumberOfLeds + i] = CHSV(_game->getPlayer(2)->color, 255, brightness);
-  }
+  _score->draw(_zone1->getPlayer(), _zone2->getPlayer(), brightness);
 }
 
 
@@ -130,7 +136,7 @@ void Field::drawScore(const int brightness) {
 */
 void Field::drawLastHit() {
   if (previousButtonPos != -1 && previousButtonMillis + 500 > millis()) {
-    leds[previousButtonPos] = CHSV(previousButtonColor, 255, 0);
+    _leds[previousButtonPos] = CHSV(previousButtonColor, 255, 0);
   }
 }
 
@@ -138,8 +144,8 @@ void Field::drawLastHit() {
 void Field::showRainbow(const boolean won) {
   clear();
   for (int k = 0; k < 750; k++) {  // several rounds rainbow
-    fill_rainbow(&(leds[won ? 0 : 30]), 30, millis() / 10);
-    fadeToBlackBy(leds, 60, 255 - (_maxBrightness / 4));
+    fill_rainbow(&(_leds[won ? 0 : 30]), 30, millis() / 10);
+    fadeToBlackBy(_leds, 60, 255 - (_maxBrightness / 4));
     FastLED.show();
     delay(7);
   }

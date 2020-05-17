@@ -4,21 +4,22 @@
 #include "Player.h"
 
 
-void Player::begin(Zone *zone) {
-  pinMode(_buttonPin, INPUT_PULLUP);   // PINs for buttons
+void Player::begin() {
+  pinMode(_buttonPin, INPUT_PULLUP);
+}
+
+void Player::setZone(Zone *zone) {
   _zone = zone;
+  _zone->setPlayer(this);
 }
 
-void Player::setSetupMode() {
-  _zone->setColor(Color::ENDZONE_SETUP);
+
+bool Player::isLeftPlayer() {
+  return _zone->getHomePosition() < 25;
 }
 
-void Player::setGameMode() {
-  _zone->setColor(Color::ENDZONE_GAME);
-}
-
-void Player::drawZone(CRGB *leds, int brightness) {
-  _zone->draw(leds, brightness);
+bool Player::isRightPlayer() {
+  return !isLeftPlayer();
 }
 
 int Player::getHomePosition() {
@@ -35,6 +36,9 @@ bool Player::isSuperBoost(Ball *ball) {
 bool Player::isNormalBoost(Ball *ball) {
   return _zone->isNormalBoost(ball->position());
 
+}
+int Player::getScore() {
+  return _score;
 }
 
 bool Player::isPastEndZone(Ball *ball) {
