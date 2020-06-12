@@ -13,6 +13,9 @@ void Player::setZone(Zone *zone) {
   _zone->setPlayer(this);
 }
 
+void Player::indicateStart(int brightness) {
+  _zone->indicateStart(brightness);
+}
 
 bool Player::isLeftPlayer() {
   return _zone->getHomePosition() < 25;
@@ -28,7 +31,15 @@ int Player::getHomePosition() {
 
 bool Player::hasButtonPressedInEndZone(Ball *const ball) {
   return _zone->isInEndZone(ball->position());
-};
+}
+
+void Player::disable() {
+  return _zone->disable();
+}
+
+void Player::enable() {
+  return _zone->enable();
+}
 
 bool Player::isSuperBoost(Ball *ball) {
   return _zone->isSuperBoost(ball->position());
@@ -56,6 +67,7 @@ bool Player::hasAlreadyPressedButton() {
 
 void Player::forgetPressed() {
   alreadyPressedButton = false;
+  _zone->enable();
 }
 
 void Player::reset() {

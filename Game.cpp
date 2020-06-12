@@ -12,18 +12,22 @@ Game::Game(Field *field, Sound *sound, Player *player1, Player *player2) :
   _player2(player2),
   _sound(sound) {
 
+  randomSeed(analogRead(0));
+
   _field->setGame(this);
   _field->assignToZone1(_player1);
   _field->assignToZone2(_player2);
 
   _ball = new Ball(_field);
 
-  randomSeed(analogRead(0));
-  _currentPlayer = random(2) == 0 ? _player1 : _player2;
 }
 
 void Game::begin() {
   _sound->begin();
+  for (int i = 0; i < 10; i++) {
+    Serial.println(random(2));
+  }
+  _currentPlayer = random(2) == 0 ? _player1 : _player2;
 }
 
 void Game::menu() {
@@ -58,6 +62,7 @@ void Game::start() {
     initializePlayers();
 
     gameLoop();
+
     checkScore();
     checkWinner();
   }
@@ -109,6 +114,9 @@ void Game::checkPlayerButton(Player* const player, const BallDirection direction
     _field->rememberButtonPress(_ball, player);
     if (player->hasButtonPressedInEndZone(_ball)) {
       changeDirection(player);
+    } else {
+      Serial.println("Disable player");
+      disablePlayer(player);
     }
   }
 }
@@ -118,6 +126,10 @@ void Game::changeDirection(Player *player) {
   BallSpeedType speedType = _ball->changeDirection(_speed, player);
   playBounceSound(speedType);
   player->forgetPressed();
+}
+
+void Game::disablePlayer(Player *player) {
+  player->disable();
 }
 
 void Game::playBounceSound(BallSpeedType speedType) {

@@ -18,6 +18,7 @@ class Zone {
       _homePosition(homePosition),
       _length(zoneLength)
     {
+      _enabled = true;
     }
 
     Player *getPlayer();
@@ -31,7 +32,14 @@ class Zone {
     bool isNormalBoost(int ballPosition);
     bool isSuperBoost(int ballPosition);
 
-    void draw(int brightness);
+    void disable() {
+      _enabled = false;
+    }
+    void enable() {
+      _enabled = true;
+    }
+    void draw(int brightness, bool show = false);
+    void indicateStart(int brightness);
 
     void setColor(Color color) {
       _color = color;
@@ -52,6 +60,7 @@ class Zone {
     int _homePosition;
     int _length;
     int _color = Color::ENDZONE_GAME;
+    bool _enabled;
 
 };
 

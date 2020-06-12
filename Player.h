@@ -34,8 +34,11 @@ class Player {
     void addPoint();
     int getScore();
     bool isButtonPressed();
+    void indicateStart(int brightness);
 
     bool hasButtonPressedInEndZone(Ball *ball);
+    void disable();
+    void enable();
     bool isSuperBoost(Ball *ball);
     bool isNormalBoost(Ball *ball);
     bool isPastEndZone(Ball *ball);

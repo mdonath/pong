@@ -80,7 +80,9 @@ void Field::drawMovingBall(Ball *ball) {
 void Field::drawBallAtPlayerAndWait(Ball *ball, Player *player) {
   ball->startAt(player);
 
+  player->indicateStart(_maxBrightness);
   drawBall(ball, player->color);
+  
   player->waitForButtonPress();
   drawBall(ball, Color::ENDZONE_GAME);
 }

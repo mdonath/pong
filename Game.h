@@ -51,6 +51,7 @@ class Game {
     void checkPlayerButton(Player *player, const BallDirection direction);
     void checkButtonPressedPosition();
     void changeDirection(Player *player);
+    void disablePlayer(Player *player);
     void playBounceSound(BallSpeedType speedType);
     void checkScore();
     void showScoringPlayer(Player *player);

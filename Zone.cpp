@@ -39,18 +39,32 @@ bool Zone::isSuperBoost(int ballPosition) {
   return ballPosition == _homePosition;
 }
 
-
-void Zone::draw(int brightness) {
+void Zone::draw(int brightness, bool show) {
   if (_length > 0) {
     for (int i = _homePosition; i < _homePosition + _length; i++) {
-      _field->setLed(i, CHSV(_color, 255, brightness));
+      _field->setLed(i, CHSV(_color, 255, _enabled ? brightness : 0), show);
     }
   } else {
     for (int i = _homePosition + 1 + _length; i < _homePosition + 1; i++) {
-      _field->setLed(i, CHSV(_color, 255, brightness));
+      _field->setLed(i, CHSV(_color, 255, _enabled ? brightness : 0), show);
     }
   }
 }
 
+void Zone::indicateStart(int brightness) {
+  for (int r = 0; r < 10; r++) {
+    if (_length > 0) {
+      for (int i = _homePosition - 1 + _length; i > _homePosition - 1; i--) {
+        _field->setLed(i, CHSV(_color, 255, r % 2 ? 0 : brightness), true);
+      }
+    } else {
+      for (int i = _homePosition + 1 + _length; i < _homePosition + 1; i++) {
+        _field->setLed(i, CHSV(_color, 255, r % 2 ? 0 : brightness), true);
+      }
+    }
+    delay(50);
+  }
+  draw(brightness, true);
+}
 
 #endif
